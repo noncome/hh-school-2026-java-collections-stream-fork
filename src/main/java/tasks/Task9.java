@@ -25,12 +25,10 @@ public class Task9 {
 
   // Костыль, эластик всегда выдает в топе "фальшивую персону".
   // Конвертируем начиная со второй
+  //    toList() вернёт emptyList если будет передан пустой набор элементов
+  //    Избавляемся от первого элемента через метод sublist
   public List<String> getNames(List<Person> persons) {
-    if (persons.size() == 0) {
-      return Collections.emptyList();
-    }
-    persons.remove(0);
-    return persons.stream().map(Person::firstName).collect(Collectors.toList());
+    return persons.subList(1, persons.size()).stream().map(Person::firstName).toList();
   }
 
   // Зачем-то нужны различные имена этих же персон (без учета фальшивой разумеется)
@@ -39,51 +37,30 @@ public class Task9 {
   }
 
   // Тут фронтовая логика, делаем за них работу - склеиваем ФИО
+  //    Логика реализуется в одну строку через стрим и его метод joining
+  //    Не совсем понял, является ли ошибкой то, что secondName используется два раза, но на всякий случай оставил так
   public String convertPersonToString(Person person) {
-    String result = "";
-    if (person.secondName() != null) {
-      result += person.secondName();
-    }
-
-    if (person.firstName() != null) {
-      result += " " + person.firstName();
-    }
-
-    if (person.secondName() != null) {
-      result += " " + person.secondName();
-    }
-    return result;
+    return Stream.of(person.secondName(), person.firstName(), person.secondName()).collect(Collectors.joining(" ", "", ""));
   }
 
   // словарь id персоны -> ее имя
+  //    Собираем мапу через toMap, чтобы избежать исключения при одинаковых ключах, добавил туда merge-функцию
+  //    Как я понял, если id повторяются, то мы просто не принимаем новое значение, merge-функция в таком случае оставит уже добавленное имя
   public Map<Integer, String> getPersonNames(Collection<Person> persons) {
-    Map<Integer, String> map = new HashMap<>(1);
-    for (Person person : persons) {
-      if (!map.containsKey(person.id())) {
-        map.put(person.id(), convertPersonToString(person));
-      }
-    }
-    return map;
+    return new HashMap<>(persons.stream().collect(Collectors.toMap(Person::id, this::convertPersonToString, (containedName, newName) -> containedName)));
   }
 
   // есть ли совпадающие в двух коллекциях персоны?
+  //  Вместо вложенных циклов используем метод стрима anyMatch
+  //    - вернёт true и завершит работу как только найдётся хоть один совпадающий элемент
   public boolean hasSamePersons(Collection<Person> persons1, Collection<Person> persons2) {
-    boolean has = false;
-    for (Person person1 : persons1) {
-      for (Person person2 : persons2) {
-        if (person1.equals(person2)) {
-          has = true;
-        }
-      }
-    }
-    return has;
+    return persons1.stream().anyMatch(persons2::contains);
   }
 
   // Посчитать число четных чисел
+  //  Можно избавиться от переменной использовав метод count после filter
   public long countEven(Stream<Integer> numbers) {
-    count = 0;
-    numbers.filter(num -> num % 2 == 0).forEach(num -> count++);
-    return count;
+    return numbers.filter(num -> num % 2 == 0).count();
   }
 
   // Загадка - объясните почему assert тут всегда верен
@@ -96,3 +73,10 @@ public class Task9 {
     assert snapshot.toString().equals(set.toString());
   }
 }
+/*
+  Как я понял, у Integer hashCode всегда будет возвращать их числовое значение.
+  При вставке в HashSet индекс будет рассчитываться по отдельной формуле index = (n - 1) & hash, то есть положение чисел в нём
+  не будет зависеть от индексов в исходном List, даже если они перемешаны. А в нашем конкретном случае чисел в мапе будет меньше
+  чем выделено бакетов, поэтому каждое число будет лежать в отдельном бакете. Поэтому при выводе элементов будет по очереди выведено
+  содержимое бакетов.
+ */

@@ -2,9 +2,9 @@ package tasks;
 
 import common.Person;
 import common.PersonService;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 /*
 Задача 1
@@ -23,6 +23,10 @@ public class Task1 {
 
   public List<Person> findOrderedPersons(List<Integer> personIds) {
     Set<Person> persons = personService.findPersons(personIds);
-    return Collections.emptyList();
+    Map<Integer, List<Person>> personsById = persons.stream().collect(Collectors.groupingBy(Person::id));
+    return personIds.stream().map(personId -> personsById.get(personId).get(0)).toList();
   }
 }
+//  Переписал решение, теперь асимптотика должна быть O(n + m)
+//  Процессы выполняются последовательно, друг от друга не зависят.
+//  Мапа соберётся за O(n), вывод произойдёт за O(m)

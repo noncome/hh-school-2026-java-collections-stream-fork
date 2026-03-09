@@ -2,10 +2,8 @@ package tasks;
 
 import common.Person;
 import common.PersonService;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
+
+import java.util.*;
 import java.util.stream.Collectors;
 
 /*
@@ -25,13 +23,10 @@ public class Task1 {
 
   public List<Person> findOrderedPersons(List<Integer> personIds) {
     Set<Person> persons = personService.findPersons(personIds);
-      return persons.stream()
-        .flatMap(Person -> Collections.nCopies(Collections.frequency(personIds, Person.id()), Person).stream())
-        .sorted(Comparator.comparing(Person -> personIds.indexOf(Person.id())))
-        .toList();
+    Map<Integer, List<Person>> personsById = persons.stream().collect(Collectors.groupingBy(Person::id));
+    return personIds.stream().map(personId -> personsById.get(personId).get(0)).toList();
   }
 }
-//  Асимптотика моего решения будет O(n^2 log n)
-//  flatMap применяет функцию к каждому элементу за O(n)
-//  Нугуглил, что sorted сортирует за O(n log n)
-//  Не совсем понял как на общую сложность повлияет frequency, так как он зависит от другой коллекции
+//  Переписал решение, теперь асимптотика должна быть O(n + m)
+//  Процессы выполняются последовательно, друг от друга не зависят.
+//  Мапа соберётся за O(n), вывод произойдёт за O(m)

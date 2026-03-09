@@ -4,10 +4,10 @@ import common.Person;
 import common.PersonService;
 import common.PersonWithResumes;
 import common.Resume;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
+
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /*
   Еще один вариант задачи обогащения
@@ -24,10 +24,14 @@ public class Task8 {
 
   public Set<PersonWithResumes> enrichPersonsWithResumes(Collection<Person> persons) {
     Set<Resume> resumes = personService.findResumes(persons.stream().map(Person::id).collect(Collectors.toSet()));
-    return persons.stream()
-      .map(person -> new PersonWithResumes(person, resumes.stream()
-        .filter(resume -> resume.personId().equals(person.id()))
-        .collect(Collectors.toSet())))
-      .collect(Collectors.toSet());
+
+    Map<Integer, PersonWithResumes> personsWithResumes = persons.stream()
+      .collect(Collectors.toMap(
+        Person::id,
+        person -> new PersonWithResumes(person, new HashSet<>())));
+
+    resumes.stream().forEach(resume -> personsWithResumes.get(resume.personId()).resumes().add(resume));
+
+    return new HashSet<>(personsWithResumes.values());
   }
 }

@@ -1,14 +1,10 @@
 package tasks;
 
 import common.Person;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+
+import java.security.Identity;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -28,7 +24,7 @@ public class Task9 {
   //    toList() вернёт emptyList если будет передан пустой набор элементов
   //    Избавляемся от первого элемента через метод sublist
   public List<String> getNames(List<Person> persons) {
-    return persons.subList(1, persons.size()).stream().map(Person::firstName).toList();
+    return persons.stream().skip(1).map(Person::firstName).toList();
   }
 
   // Зачем-то нужны различные имена этих же персон (без учета фальшивой разумеется)
@@ -40,7 +36,7 @@ public class Task9 {
   //    Логика реализуется в одну строку через стрим и его метод joining
   //    Не совсем понял, является ли ошибкой то, что secondName используется два раза, но на всякий случай оставил так
   public String convertPersonToString(Person person) {
-    return Stream.of(person.secondName(), person.firstName(), person.secondName()).collect(Collectors.joining(" ", "", ""));
+    return Stream.of(person.secondName(), person.firstName(), person.secondName()).filter(Objects::nonNull).collect(Collectors.joining(" "));
   }
 
   // словарь id персоны -> ее имя
@@ -54,7 +50,8 @@ public class Task9 {
   //  Вместо вложенных циклов используем метод стрима anyMatch
   //    - вернёт true и завершит работу как только найдётся хоть один совпадающий элемент
   public boolean hasSamePersons(Collection<Person> persons1, Collection<Person> persons2) {
-    return persons1.stream().anyMatch(persons2::contains);
+    Set<Integer> ids = persons1.stream().map(Person::id).collect(Collectors.toSet());
+    return persons2.stream().map(Person::id).anyMatch(ids::contains);
   }
 
   // Посчитать число четных чисел
